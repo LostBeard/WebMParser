@@ -1,4 +1,4 @@
-﻿namespace WebMParser
+﻿namespace SpawnDev.WebMParser
 {
     public class IntElement : WebMElement<long>
     {

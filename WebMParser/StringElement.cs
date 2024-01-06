@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace WebMParser
+namespace SpawnDev.WebMParser
 {
     public class StringElement : WebMElement<string>
     {

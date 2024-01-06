@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebMParser\WebMParser.csproj" />
+    <ProjectReference Include="..\WebMParser\SpawnDev.WebMParser.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace WebMParser
+﻿namespace SpawnDev.WebMParser
 {
     public abstract class SegmentSource : Stream
     {

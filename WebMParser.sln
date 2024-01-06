@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebMParserDemo", "WebMParse
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6A7588CB-12DD-4585-B8BA-C2667020FFFC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebMParser", "WebMParser\WebMParser.csproj", "{D2AED413-57A0-47CC-A617-C89EBF8AC291}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpawnDev.WebMParser", "WebMParser\SpawnDev.WebMParser.csproj", "{D2AED413-57A0-47CC-A617-C89EBF8AC291}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

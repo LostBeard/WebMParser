@@ -1,6 +1,6 @@
 ﻿using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace WebMParser
+namespace SpawnDev.WebMParser
 {
     public abstract class WebMElement
     {
