@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34407.89
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebMParserDemo", "WebMParserDemo\WebMParserDemo.csproj", "{02F07EB6-1441-4290-A5BE-3136BF22A9F0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6A7588CB-12DD-4585-B8BA-C2667020FFFC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebMParser", "WebMParser\WebMParser.csproj", "{D2AED413-57A0-47CC-A617-C89EBF8AC291}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02F07EB6-1441-4290-A5BE-3136BF22A9F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02F07EB6-1441-4290-A5BE-3136BF22A9F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02F07EB6-1441-4290-A5BE-3136BF22A9F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02F07EB6-1441-4290-A5BE-3136BF22A9F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2AED413-57A0-47CC-A617-C89EBF8AC291}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2AED413-57A0-47CC-A617-C89EBF8AC291}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2AED413-57A0-47CC-A617-C89EBF8AC291}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2AED413-57A0-47CC-A617-C89EBF8AC291}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B3E20B88-03C4-4F8F-A43A-84F7EDDC0184}
+	EndGlobalSection
+EndGlobal
