@@ -1,14 +1,8 @@
+# SpawnDev.WebMParser
 
-
-
-
-# NuGet
 | Package | Description |
 |---------|-------------|
 |**[SpawnDev.WebMParser](#webmparser)** <br /> [![NuGet version](https://badge.fury.io/nu/SpawnDev.WebMParser.svg)](https://www.nuget.org/packages/SpawnDev.WebMParser)| .Net WebM parser and editor | 
-
-
-# WebMParser
 
 WebMParser is a .Net WebM parser written in C#. 
 
