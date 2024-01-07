@@ -1,8 +1,17 @@
-﻿namespace SpawnDev.WebMParser
+﻿using System.Collections.ObjectModel;
+using System.Xml.Linq;
+
+namespace SpawnDev.WebMParser
 {
-    public class ContainerElement : WebMElement<List<WebMElement>>
+    public class ContainerElement : WebMElement<ReadOnlyCollection<WebMElement>>
     {
-        public override string ToString() => $"[ {Id} ] - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Entries: {Data.Count}";
+        private List<WebMElement> __Data = new List<WebMElement>();
+        public override ReadOnlyCollection<WebMElement> Data
+        {
+            get => __Data.AsReadOnly();
+            set => throw new NotImplementedException();
+        }
+        public override string ToString() => $"{Index} [ {Id} ] - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Entries: {Data.Count}";
         public ContainerElement(ElementId id) : base(id) { }
         public ContainerElement? GetContainer(params ElementId[] ids)
         {
@@ -89,13 +98,12 @@
         }
         public override void UpdateBySource()
         {
-            if (Data != null)
+            foreach (var el in __Data)
             {
-                foreach (var el in Data)
-                {
-                    el.OnDataChanged -= Element_DataChanged;
-                }
+                el.OnDataChanged -= Element_DataChanged;
+                el.SetParent();
             }
+            __Data.Clear();
             var elements = new List<WebMElement>();
             if (Stream == null)
             {
@@ -112,12 +120,10 @@
                     if (id == ElementId.Segment)
                     {
                         len = FindSegmentLength(Stream);
-                        var gg = true;
                     }
                     else if (id == ElementId.Cluster)
                     {
                         len = FindClusterLength(Stream);
-                        var gg = true;
                     }
                     else
                     {
@@ -133,18 +139,18 @@
                 var slice = Stream.Slice(len);
                 var element = (WebMElement)Activator.CreateInstance(elementType, id)!;
                 elements.Add(element);
-                element.UpdateIdChain(IdChain);
+                element.SetParent(this);
                 element.SetSource(slice);
                 element.OnDataChanged += Element_DataChanged;
             }
-            Data = elements;
+            __Data = elements;
         }
         public List<WebMElement> Descendants
         {
             get
             {
                 var ret = new List<WebMElement>();
-                foreach (var el in Data)
+                foreach (var el in __Data)
                 {
                     ret.Add(el);
                     if (el is ContainerElement container)
@@ -162,9 +168,9 @@
         public bool Add(ElementId id, long value) => Add(new IntElement(id, value));
         public bool Add(WebMElement element)
         {
-            if (Data.Contains(element)) return false;
-            Data.Add(element);
-            element.UpdateIdChain(IdChain);
+            if (__Data.Contains(element)) return false;
+            __Data.Add(element);
+            element.SetParent(this);
             element.OnDataChanged += Element_DataChanged;
             UpdateByData();
             return true;
@@ -175,8 +181,9 @@
         }
         public bool Remove(WebMElement element)
         {
-            var succ = Data.Remove(element);
+            var succ = __Data.Remove(element);
             if (!succ) return false;
+            element.SetParent();
             element.OnDataChanged -= Element_DataChanged;
             UpdateByData();
             return succ;

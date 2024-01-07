@@ -15,7 +15,6 @@ namespace WebMParserDemo
             inputFile = Path.Combine(videoFolder, "56135218-d984-4b18-96a8-f81e830da98f.webm");
             //inputFile = Path.Combine(videoFolder, "Big_Buck_Bunny_4K.webm.480p.vp9.webm");
 #endif
-
             //
             var inputFileBaseName = Path.GetFileName(inputFile);
             Console.WriteLine($"Input: {inputFileBaseName}");
@@ -33,6 +32,8 @@ namespace WebMParserDemo
                     Console.WriteLine($"{indent}{element}");
                 }
             }
+            //
+
             // 
             if (fixDuration)
             {

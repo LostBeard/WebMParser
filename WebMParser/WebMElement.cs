@@ -4,6 +4,11 @@ namespace SpawnDev.WebMParser
 {
     public abstract class WebMElement
     {
+        /// <summary>
+        /// The 0 based index of this item in the parent container, or 0 if not in a container
+        /// </summary>
+        public int Index => Parent == null ? 0 : Parent.Data.IndexOf(this);
+        public ContainerElement? Parent { get; private set; }
         public bool DataChanged { get; protected set; }
         public ElementId Id { get; init; }
         public ElementId[] IdChain { get; protected set; }
@@ -12,14 +17,22 @@ namespace SpawnDev.WebMParser
         public WebMElement(ElementId id)
         {
             Id = id;
-            IdChain = id == ElementId.File ? [] : [id];
+            IdChain = Id == ElementId.File ? [] : [Id];
         }
 
-        public void UpdateIdChain(ElementId[] parentIdChain)
+        public void SetParent(ContainerElement? parent = null)
         {
-            var idChain = new List<ElementId>(parentIdChain);
-            if (Id != ElementId.File) idChain.Add(Id);
-            IdChain = idChain.ToArray();
+            Parent = parent;
+            if (parent != null)
+            {
+                var idChain = new List<ElementId>(parent.IdChain);
+                if (Id != ElementId.File) idChain.Add(Id);
+                IdChain = idChain.ToArray();
+            }
+            else
+            {
+                IdChain = Id == ElementId.File ? [] : [Id];
+            }
         }
 
         public static ElementId ReadElementId(Stream data) => (ElementId)ReadContainerUint(data);
@@ -338,7 +351,7 @@ namespace SpawnDev.WebMParser
             { ElementId.TagBinary, typeof(BinaryElement) },
         };
         public static uint UnknownElementSize = uint.MaxValue;
-        public override string ToString() => $"{Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes";
+        public override string ToString() => $"{Index} {Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes";
         public event Action<WebMElement> OnDataChanged;
         protected void DataChangedInvoke()
         {
@@ -354,8 +367,8 @@ namespace SpawnDev.WebMParser
             get => _Data; 
             set 
             {
-                //var isEqual = EqualityComparer<T>.Default.Equals(_Data, value);
-                //if (isEqual) return;
+                var isEqual = EqualityComparer<T>.Default.Equals(_Data, value);
+                if (isEqual) return;
                 _Data = value;
                 if (!UpdatingSource)
                 {
@@ -379,6 +392,6 @@ namespace SpawnDev.WebMParser
         {
             throw new NotImplementedException();
         }
-        public override string ToString() => $"{Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Value: {Data}";
+        public override string ToString() => $"{Index} {Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Value: {Data}";
     }
 }
