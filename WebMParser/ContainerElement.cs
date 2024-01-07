@@ -13,38 +13,28 @@ namespace SpawnDev.WebMParser
         }
         public override string ToString() => $"{Index} [ {Id} ] - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Entries: {Data.Count}";
         public ContainerElement(ElementId id) : base(id) { }
-        public ContainerElement? GetContainer(params ElementId[] ids)
-        {
-            return GetElements<ContainerElement>(ids).FirstOrDefault();
-        }
-        public List<ContainerElement> GetContainers(params ElementId[] ids)
-        {
-            return GetElements<ContainerElement>(ids);
-        }
-        public WebMElement? GetElement(params ElementId[] ids)
-        {
-            return GetElements<WebMElement>(ids).FirstOrDefault();
-        }
-        public List<WebMElement> GetElements(params ElementId[] ids)
-        {
-            return GetElements<WebMElement>(ids);
-        }
+        public ContainerElement? GetContainer(params ElementId[] ids) => GetElement<ContainerElement>(ids);
+        public List<ContainerElement> GetContainers(params ElementId[] ids) => GetElements<ContainerElement>(ids);
+        public WebMElement? GetElement(params ElementId[] ids) => GetElement<WebMElement>(ids);
+        public List<WebMElement> GetElements(params ElementId[] ids) => GetElements<WebMElement>(ids);
         public T? GetElement<T>(params ElementId[] ids) where T : WebMElement
         {
-            return GetElements<T>(ids).FirstOrDefault();
+            var idChain = new List<ElementId>();
+            idChain.AddRange(IdChain);
+            idChain.AddRange(ids);
+            var ret = Descendants.FirstOrDefault(o => o.IdChain.SequenceEqual(idChain));
+            return (T?)ret;
         }
+
         public List<T> GetElements<T>(params ElementId[] ids) where T : WebMElement
         {
-            ContainerElement? containerElement = this;
-            for (var i = 0; i < ids.Length - 1; i++)
-            {
-                var id = ids[i];
-                containerElement = (ContainerElement?)containerElement.Data.FirstOrDefault(o => o.Id == id);
-                if (containerElement == null) return new List<T>();
-            }
-            var lastId = ids.Last();
-            return containerElement.Data.Where(o => o.Id == lastId).Select(o => (T)o).ToList();
+            var idChain = new List<ElementId>();
+            idChain.AddRange(IdChain);
+            idChain.AddRange(ids);
+            var ret = Descendants.Where(o => o.IdChain.SequenceEqual(idChain)).Select(o => (T)o).ToList();
+            return ret;
         }
+
         long CalculatedLength = 0;
         public override long Length => Stream != null ? Stream.Length : CalculatedLength;
         long CalculateLength()
