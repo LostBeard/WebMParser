@@ -2,7 +2,7 @@
 
 | Package | Description |
 |---------|-------------|
-|**[SpawnDev.WebMParser](#webmparser)** <br /> [![NuGet version](https://badge.fury.io/nu/SpawnDev.WebMParser.svg)](https://www.nuget.org/packages/SpawnDev.WebMParser)| .Net WebM parser and editor | 
+|**[SpawnDev.WebMParser](#webmparser)**[![NuGet version](https://badge.fury.io/nu/SpawnDev.WebMParser.svg)](https://www.nuget.org/packages/SpawnDev.WebMParser)| .Net WebM parser and editor | 
 
 WebMParser is a .Net WebM parser written in C#. 
 
@@ -11,7 +11,6 @@ The initial goal of this library is to allow adding a duration to WebM video fil
 The demo project included with the library is a .Net core 8 console app that currently just allows testing the library.  
 
 To fix the duration in a WebM file, WebM parser reads the Timecode information from Clusters and SimpleBlocks and adds a Segment > Info > Duration element with the new duration.
-
 
 Example of how to add Duration info if not found in a the WebM stream.
 ```cs
