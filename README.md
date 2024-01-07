@@ -13,9 +13,8 @@ The demo project included with the library is a .Net core 8 console app that cur
 To fix the duration in a WebM file, WebM parser reads the Timecode information from Clusters and SimpleBlocks and adds a Segment > Info > Duration element with the new duration.
 
 
-Example of how to add Duration info if not found in a webm stream.
+Example of how to add Duration info if not found in a the WebM stream.
 ```cs
-
 using var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read);
 
 var webm = new WebMStreamParser(inputStream);
