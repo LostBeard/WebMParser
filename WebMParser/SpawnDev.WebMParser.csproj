@@ -11,7 +11,7 @@
 		<DebugType>Embedded</DebugType>
 		<Title>SpawnDev.WebMParser</Title>
 		<Authors>LostBeard</Authors>
-		<Description>Pure .Net WebM parser and editor for WebM data. Supports duration fixing.</Description>
+		<Description>.Net WebM parser and editor. Supports duration fixing.</Description>
 		<PackageProjectUrl>https://github.com/LostBeard/WebMParser</PackageProjectUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
