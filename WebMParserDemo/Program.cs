@@ -21,10 +21,6 @@ namespace WebMParserDemo
             //
             using var inputStream = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read);
             var webm = new WebMStreamParser(inputStream);
-            //
-
-            var segment = webm.GetContainer(ElementId.Segment);
-            var clusters = segment.GetElements<UintElement>(ElementId.Cluster, ElementId.Timecode);
             // 
             if (verbose)
             {
@@ -36,8 +32,6 @@ namespace WebMParserDemo
                     Console.WriteLine($"{indent}{element}");
                 }
             }
-            //
-
             // 
             if (fixDuration)
             {
