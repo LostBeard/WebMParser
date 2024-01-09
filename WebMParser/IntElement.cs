@@ -2,7 +2,8 @@
 {
     public class IntElement : WebMElement<long>
     {
-        public static implicit operator long(IntElement element) => element.Data;
+        public static explicit operator long(IntElement? element) => element == null ? 0 : element.Data;
+        public static explicit operator long?(IntElement? element) => element == null ? null : element.Data;
         int DataSize = 4;
         public IntElement(ElementId id) : base(id) { }
         public IntElement(ElementId id, long value) : base(id)

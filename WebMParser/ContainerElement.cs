@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace SpawnDev.WebMParser
@@ -11,33 +12,28 @@ namespace SpawnDev.WebMParser
             get => __Data.AsReadOnly();
             set => throw new NotImplementedException();
         }
+        
         public override string ToString() => $"{Index} [ {Id} ] - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Entries: {Data.Count}";
         public ContainerElement(ElementId id) : base(id) { }
         public ContainerElement? GetContainer(params ElementId[] ids) => GetElement<ContainerElement>(ids);
         public List<ContainerElement> GetContainers(params ElementId[] ids) => GetElements<ContainerElement>(ids);
-        public WebMElement? GetElement(params ElementId[] ids) => GetElement<WebMElement>(ids);
-        public List<WebMElement> GetElements(params ElementId[] ids) => GetElements<WebMElement>(ids);
-        public T? GetElement<T>(params ElementId[] ids) where T : WebMElement
-        {
-            var idChain = new List<ElementId>();
-            idChain.AddRange(IdChain);
-            idChain.AddRange(ids);
-            var ret = Descendants.FirstOrDefault(o => o.IdChain.SequenceEqual(idChain));
-            return (T?)ret;
-        }
-
-        public List<T> GetElements<T>(params ElementId[] ids) where T : WebMElement
-        {
-            var idChain = new List<ElementId>();
-            idChain.AddRange(IdChain);
-            idChain.AddRange(ids);
-            var ret = Descendants.Where(o => o.IdChain.SequenceEqual(idChain)).Select(o => (T)o).ToList();
-            return ret;
-        }
-
+        public bool ElementExists(params ElementId[] idChain) => GetElement<WebMElement>(idChain) != null;
+        public WebMElement? GetElement(params ElementId[] idChain) => GetElement<WebMElement>(idChain);
+        public List<WebMElement> GetElements(params ElementId[] idChain) => GetElements<WebMElement>(idChain);
+        public T? GetElement<T>(params ElementId[] idChain) where T : WebMElement => (T?)Descendants.FirstOrDefault(o => o.IdChain.SequenceEndsWith(idChain));
+        /// <summary>
+        /// Returns all elements with an IdChain that ends with the provided idChain<br />
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="idChain">idChain is an array ending in the desired ElementId types to be returned, with optional preceding parent ElementIds</param>
+        /// <returns></returns>
+        public List<T> GetElements<T>(params ElementId[] idChain) where T : WebMElement => Descendants.Where(o => o.IdChain.SequenceEndsWith(idChain)).Select(o => (T)o).ToList();
         long CalculatedLength = 0;
+        /// <summary>
+        /// Returns the byte length of this container
+        /// </summary>
         public override long Length => Stream != null ? Stream.Length : CalculatedLength;
-        long CalculateLength()
+        private long CalculateLength()
         {
             long ret = 0;
             foreach (var element in Data)
@@ -51,6 +47,12 @@ namespace SpawnDev.WebMParser
             }
             return ret;
         }
+        /// <summary>
+        /// Copies the container to the specified stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bufferSize"></param>
+        /// <returns></returns>
         public override long CopyTo(Stream stream, int? bufferSize = null)
         {
             if (!DataChanged && Stream != null)
@@ -132,10 +134,14 @@ namespace SpawnDev.WebMParser
                 element.SetParent(this);
                 element.SetSource(slice);
                 element.OnDataChanged += Element_DataChanged;
+                Stream.Position = sectionBodyPos + len;
             }
             __Data = elements;
         }
-        public List<WebMElement> Descendants
+        /// <summary>
+        /// A flat list of all the elements contained by this element and their children
+        /// </summary>
+        public ReadOnlyCollection<WebMElement> Descendants
         {
             get
             {
@@ -148,14 +154,49 @@ namespace SpawnDev.WebMParser
                         ret.AddRange(container.Descendants);
                     }
                 }
-                return ret;
+                return ret.AsReadOnly();
             }
         }
+        /// <summary>
+        /// Adds a FloatElement to this container with the given value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool Add(ElementId id, double value) => Add(new FloatElement(id, value));
+        /// <summary>
+        /// Adds a FloatElement to this container with the given value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool Add(ElementId id, float value) => Add(new FloatElement(id, value));
+        /// <summary>
+        /// Adds a StringElement to this container with the given value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool Add(ElementId id, string value) => Add(new StringElement(id, value));
+        /// <summary>
+        /// Adds a UintElement to this container with the given value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool Add(ElementId id, ulong value) => Add(new UintElement(id, value));
+        /// <summary>
+        /// Adds an IntElement to this container with the given value
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool Add(ElementId id, long value) => Add(new IntElement(id, value));
+        /// <summary>
+        /// Adds a WebMElement to this container with the given value
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>
         public bool Add(WebMElement element)
         {
             if (__Data.Contains(element)) return false;
@@ -169,6 +210,11 @@ namespace SpawnDev.WebMParser
         {
             UpdateByData();
         }
+        /// <summary>
+        /// Removes a WebElement from this container
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>
         public bool Remove(WebMElement element)
         {
             var succ = __Data.Remove(element);
@@ -193,7 +239,7 @@ namespace SpawnDev.WebMParser
                     {
                         len = FindClusterLength(stream);
                     }
-                    if (!SegmentChildTypes.Contains(id))
+                    if (!SegmentChildIds.Contains(id))
                     {
                         break;
                     }
@@ -219,7 +265,7 @@ namespace SpawnDev.WebMParser
                     var id = ReadElementId(stream);
                     var len = ReadContainerUint(stream);
                     var sectionInfo = GetElementType(id);
-                    if (!ClusterChildTypes.Contains(id))
+                    if (!ClusterChildIds.Contains(id))
                     {
                         break;
                     }

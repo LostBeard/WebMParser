@@ -9,15 +9,15 @@
         /// <summary>
         /// Segment start position in Source
         /// </summary>
-        public virtual long Offset { get; private set; }
+        public virtual long Offset { get; init; }
         /// <summary>
         /// Whether this SegmentSource owns the underlying source object
         /// </summary>
-        public virtual bool OwnsSource { get; private set; }
+        public virtual bool OwnsSource { get; init; }
         /// <summary>
         /// Segment size in bytes.
         /// </summary>
-        protected virtual long Size { get; set; }
+        protected virtual long Size { get; init; }
         protected virtual long SourcePosition { get; set; }
         // Stream
         public override long Length => Size;
@@ -57,13 +57,6 @@
             return slice;
         }
         public SegmentSource Slice(long size) => Slice(SourcePosition, size);
-        //public virtual void WriteTo(Stream targetStream, long bufferSize = 65536)
-        //{
-        //    byte[] buffer = new byte[bufferSize];
-        //    int n;
-        //    while ((n = Read(buffer, 0, buffer.Length)) != 0)
-        //        targetStream.Write(buffer, 0, n);
-        //}
         public override void CopyTo(Stream destination, int bufferSize)
         {
             base.CopyTo(destination, bufferSize);

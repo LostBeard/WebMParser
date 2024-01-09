@@ -2,7 +2,8 @@
 {
     public class UintElement : WebMElement<ulong>
     {
-        public static implicit operator ulong(UintElement element) => element.Data;
+        public static explicit operator ulong(UintElement? element) => element == null ? 0 : element.Data;
+        public static explicit operator ulong?(UintElement? element) => element == null ? default : element.Data;
         public UintElement(ElementId id) : base(id) { }
         public UintElement(ElementId id, ulong value) : base(id)
         {

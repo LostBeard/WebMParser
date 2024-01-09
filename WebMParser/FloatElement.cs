@@ -2,7 +2,8 @@
 {
     public class FloatElement : WebMElement<double>
     { 
-        public static implicit operator double(FloatElement element) => element.Data;
+        public static explicit operator double(FloatElement? element) => element == null ? 0 : element.Data;
+        public static explicit operator double?(FloatElement? element) => element == null ? null : element.Data;
         int DataSize = 4;
         public FloatElement(ElementId id) : base(id) { }
         public FloatElement(ElementId id, float value) : base(id)

@@ -1,26 +1,53 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace SpawnDev.WebMParser
+﻿namespace SpawnDev.WebMParser
 {
+    /// <summary>
+    /// Base WebM element class
+    /// </summary>
     public abstract class WebMElement
     {
         /// <summary>
         /// The 0 based index of this item in the parent container, or 0 if not in a container
         /// </summary>
         public int Index => Parent == null ? 0 : Parent.Data.IndexOf(this);
+        /// <summary>
+        /// Returns the parent element this element belongs to, or null if it has no parent
+        /// </summary>
         public ContainerElement? Parent { get; private set; }
+        /// <summary>
+        /// Returns true of this element or any descendant has been modified
+        /// </summary>
         public bool DataChanged { get; protected set; }
+        /// <summary>
+        /// Returns the ElementId of this element
+        /// </summary>
         public ElementId Id { get; init; }
+        /// <summary>
+        /// An array of ElementIds ending with this elements id, preceded by this element's parent's id, and so on
+        /// </summary>
         public ElementId[] IdChain { get; protected set; }
+        /// <summary>
+        /// The segment source of this element
+        /// </summary>
         public SegmentSource? Stream { get; protected set; }
+        /// <summary>
+        /// Returns the size in bytes of this element
+        /// </summary>
         public virtual long Length => Stream != null ? Stream.Length : 0;
+        /// <summary>
+        /// Constructs source less instance with the given element id
+        /// </summary>
+        /// <param name="id"></param>
         public WebMElement(ElementId id)
         {
             Id = id;
             IdChain = Id == ElementId.File ? [] : [Id];
         }
-
-        public void SetParent(ContainerElement? parent = null)
+        /// <summary>
+        /// Remove this element from its parent
+        /// </summary>
+        /// <returns>Returns true if element has a parent and was successfully removed</returns>
+        public bool Remove() => Parent == null ? false : Parent.Remove(this);
+        internal void SetParent(ContainerElement? parent = null)
         {
             Parent = parent;
             if (parent != null)
@@ -34,45 +61,12 @@ namespace SpawnDev.WebMParser
                 IdChain = Id == ElementId.File ? [] : [Id];
             }
         }
-
-        public static ElementId ReadElementId(Stream data) => (ElementId)ReadContainerUint(data);
-        public static uint ReadContainerUint(Stream data)
-        {
-            var firstByte = (byte)data.ReadByte();
-            var bytes = 8 - Convert.ToString(firstByte, 2).Length;
-            long value = firstByte - (1 << (7 - bytes));
-            for (var i = 0; i < bytes; i++)
-            {
-                value *= 256;
-                value += (byte)data.ReadByte();
-            }
-            return (uint)value;
-        }
-        public static int GetElementIdUintSize(ElementId x) => GetContainerUintSize((uint)x);
-        public static int GetContainerUintSize(uint x)
-        {
-            int bytes;
-            int flag;
-            for (bytes = 1, flag = 0x80; x >= flag && bytes < 8; bytes++, flag *= 0x80) { }
-            return bytes;
-        }
-        public static byte[] GetElementIdUintBytes(ElementId x) => GetContainerUintBytes((uint)x);
-        public static byte[] GetContainerUintBytes(uint x)
-        {
-            int bytes;
-            int flag;
-            for (bytes = 1, flag = 0x80; x >= flag && bytes < 8; bytes++, flag *= 0x80) { }
-            var ret = new byte[bytes];
-            var value = flag + x;
-            for (var i = bytes - 1; i >= 0; i--)
-            {
-                var c = value % 256;
-                ret[i] = (byte)c;
-                value = (value - c) / 256;
-            }
-            return ret;
-        }
-
+        /// <summary>
+        /// Copies the element to a stream
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="bufferSize"></param>
+        /// <returns></returns>
         public virtual long CopyTo(Stream stream, int? bufferSize = null)
         {
             if (Stream == null) return 0;
@@ -87,23 +81,32 @@ namespace SpawnDev.WebMParser
             }
             return Length;
         }
-
         /// <summary>
-        /// Should be overridden and internally update WebMBase.Data
+        /// Should be overridden and internally update WebMBase.Data when called.<br />
         /// </summary>
         public virtual void UpdateBySource()
         {
-            Stream?.Seek(0, SeekOrigin.End);
+            //
         }
-        protected bool UpdatingSource { get; private set; } = false;
+        /// <summary>
+        /// Returns true when updating by source
+        /// </summary>
+        protected bool UpdatingBySource { get; private set; } = false;
+        /// <summary>
+        /// Loads the element from the given segment source
+        /// </summary>
+        /// <param name="stream"></param>
         public void SetSource(SegmentSource stream)
         {
             Stream = stream;
-            UpdatingSource = true;
+            UpdatingBySource = true;
             UpdateBySource();
-            UpdatingSource = false;
+            UpdatingBySource = false;
         }
-        public static List<ElementId> ClusterChildTypes = new List<ElementId>
+        /// <summary>
+        /// The element ids that a cluster can contain. Used when detecting the end of a cluster.
+        /// </summary>
+        public static List<ElementId> ClusterChildIds = new List<ElementId>
         {
             ElementId.Timecode,
             ElementId.Position,
@@ -111,7 +114,10 @@ namespace SpawnDev.WebMParser
             ElementId.SimpleBlock,
             ElementId.BlockGroup,
         };
-        public static List<ElementId> SegmentChildTypes = new List<ElementId>
+        /// <summary>
+        /// The element ids that a segment can contain. Used when detecting the end of a segment.
+        /// </summary>
+        public static List<ElementId> SegmentChildIds = new List<ElementId>
         {
             ElementId.SeekHead,
             ElementId.Info,
@@ -122,8 +128,16 @@ namespace SpawnDev.WebMParser
             ElementId.Attachments,
             ElementId.Tags,
         };
+        /// <summary>
+        /// Returns the type that can best represent the element data
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public static Type GetElementType(ElementId id) => ElementTypeMap.TryGetValue(id, out var ret) ? ret : typeof(UnknownElement);
-        public static Dictionary<ElementId, Type> ElementTypeMap = new Dictionary<ElementId, Type>
+        /// <summary>
+        /// ElementIds mapped to the type that will be used to represent the specified element 
+        /// </summary>
+        public static Dictionary<ElementId, Type> ElementTypeMap { get; } = new Dictionary<ElementId, Type>
         {
             { ElementId.EBML, typeof(ContainerElement) },
             { ElementId.EBMLVersion, typeof(UintElement) },
@@ -198,7 +212,7 @@ namespace SpawnDev.WebMParser
             { ElementId.ReferenceTimeCode, typeof(UintElement) },
             { ElementId.EncryptedBlock, typeof(BinaryElement) },
             { ElementId.Tracks, typeof(ContainerElement) },
-            { ElementId.TrackEntry, typeof(ContainerElement) },
+            { ElementId.TrackEntry, typeof(TrackEntryElement) },
             { ElementId.TrackNumber, typeof(UintElement) },
             { ElementId.TrackUID, typeof(UintElement) },
             { ElementId.TrackType, typeof(UintElement) },
@@ -350,18 +364,75 @@ namespace SpawnDev.WebMParser
             { ElementId.TagString, typeof(StringElement) },
             { ElementId.TagBinary, typeof(BinaryElement) },
         };
-        public static uint UnknownElementSize = uint.MaxValue;
+        /// <summary>
+        /// uint value that is used to represent a Segment or Cluster element of unknown size. Only Segments and CLusters can have an unknown size.
+        /// </summary>
+        public static uint UnknownElementSize { get; } = uint.MaxValue;
+        /// <summary>
+        /// Returns a string that gives information about this element
+        /// </summary>
+        /// <returns></returns>
         public override string ToString() => $"{Index} {Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes";
+        /// <summary>
+        /// Called when an elements Data is changed
+        /// </summary>
         public event Action<WebMElement> OnDataChanged;
+        /// <summary>
+        /// Should be called when Data is changed
+        /// </summary>
         protected void DataChangedInvoke()
         {
             DataChanged = true;
             OnDataChanged?.Invoke(this);
         }
+        public static ElementId ReadElementId(Stream data) => (ElementId)ReadContainerUint(data);
+        public static uint ReadContainerUint(Stream data)
+        {
+            var firstByte = (byte)data.ReadByte();
+            var bytes = 8 - Convert.ToString(firstByte, 2).Length;
+            long value = firstByte - (1 << (7 - bytes));
+            for (var i = 0; i < bytes; i++)
+            {
+                value *= 256;
+                value += (byte)data.ReadByte();
+            }
+            return (uint)value;
+        }
+        public static int GetElementIdUintSize(ElementId x) => GetContainerUintSize((uint)x);
+        public static int GetContainerUintSize(uint x)
+        {
+            int bytes;
+            int flag;
+            for (bytes = 1, flag = 0x80; x >= flag && bytes < 8; bytes++, flag *= 0x80) { }
+            return bytes;
+        }
+        public static byte[] GetElementIdUintBytes(ElementId x) => GetContainerUintBytes((uint)x);
+        public static byte[] GetContainerUintBytes(uint x)
+        {
+            int bytes;
+            int flag;
+            for (bytes = 1, flag = 0x80; x >= flag && bytes < 8; bytes++, flag *= 0x80) { }
+            var ret = new byte[bytes];
+            var value = flag + x;
+            for (var i = bytes - 1; i >= 0; i--)
+            {
+                var c = value % 256;
+                ret[i] = (byte)c;
+                value = (value - c) / 256;
+            }
+            return ret;
+        }
     }
+    /// <summary>
+    /// A typed WebMElement
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public abstract class WebMElement<T> : WebMElement
     {
         private T _Data = default(T);
+        /// <summary>
+        /// The data contained in this element
+        /// </summary>
         public virtual T Data 
         { 
             get => _Data; 
@@ -370,7 +441,7 @@ namespace SpawnDev.WebMParser
                 var isEqual = EqualityComparer<T>.Default.Equals(_Data, value);
                 if (isEqual) return;
                 _Data = value;
-                if (!UpdatingSource)
+                if (!UpdatingBySource)
                 {
                     UpdateByData();
                     DataChangedInvoke();
@@ -379,19 +450,23 @@ namespace SpawnDev.WebMParser
         }
         public WebMElement(ElementId id) : base(id){ }
         /// <summary>
-        /// Should be overridden and internally update WebMBase.Source
+        /// Should be overridden and internally update WebMBase.Source when called
         /// </summary>
         public virtual void UpdateByData()
         {
             throw new NotImplementedException();
         }
         /// <summary>
-        /// Should be overridden and internally update WebMBase.Data
+        /// Should be overridden and internally update WebMBase.Data when called
         /// </summary>
         public override void UpdateBySource()
         {
             throw new NotImplementedException();
         }
+        /// <summary>
+        /// Provides information specific to this instance
+        /// </summary>
+        /// <returns></returns>
         public override string ToString() => $"{Index} {Id} - IdChain: [ {string.Join(" ", IdChain.ToArray())} ] Type: {this.GetType().Name} Length: {Length} bytes Value: {Data}";
     }
 }
